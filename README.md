@@ -11,6 +11,9 @@ A minimalist, DOM-manipulation script to automate typing on 10FastFingers.com.
 
 Copy the code below to use it directly in your browser console:
 
+### Version 1: Standard (100% Accuracy)
+Best for testing maximum theoretical speeds.
+
 ```javascript
 function startAutoType(targetKPM) {
     const input = $('#inputfield')[0];
@@ -46,6 +49,54 @@ function startAutoType(targetKPM) {
 
 // Execution: Replace 100 with your target KPM (Max 120 recommended to avoid Captcha)
 startAutoType(100);
+```
+
+### Version 2: Humanized (Realistic Accuracy)
+Includes a randomized typo generator to intentionally miss 1 to 5 words per session, making the final result look more organic.
+
+```javascript
+function startAutoTypeHumanized(targetKPM) {
+    const input = $('#inputfield')[0];
+    const ev = $.Event('keyup');
+    ev.which = 32;
+
+    const msPerKeystroke = 60000 / targetKPM;
+    
+    // Set a random typo quota between 1 and 5 for this session
+    const targetTypos = Math.floor(Math.random() * 5) + 1;
+    let typosMade = 0;
+
+    function typeNextWord() {
+        const highlight = $('.highlight');
+        
+        if (highlight.length > 0) {
+            let word = highlight.text();
+            
+            // Typo logic: 5% chance of typo per word, until quota is met
+            if (typosMade < targetTypos && Math.random() < 0.05) {
+                // Create typo: replace the last character with 'x'
+                word = word.slice(0, -1) + 'x';
+                typosMade++;
+                console.log(`[Log] Typo executed (${typosMade}/${targetTypos}) on word: ${highlight.text()} -> ${word}`);
+            }
+            
+            input.focus();
+            input.value = word;
+            $(input).trigger(ev);
+
+            const delay = msPerKeystroke * (word.length + 1);
+            setTimeout(typeNextWord, delay);
+        } else {
+            setTimeout(typeNextWord, 500);
+        }
+    }
+
+    console.log(`[System] Active. Target KPM: ${targetKPM}. Auto-typo quota: ${targetTypos} words.`);
+    typeNextWord();
+}
+
+// Execution
+startAutoTypeHumanized(100);
 ```
 
 ## Usage Instructions
